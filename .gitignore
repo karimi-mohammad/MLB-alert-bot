@@ -1,0 +1,6 @@
+node_modules/
+.env
+data/games.db
+data/games.db-wal
+data/games.db-shm
+*.log
