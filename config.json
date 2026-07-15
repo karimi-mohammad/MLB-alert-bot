@@ -9,5 +9,5 @@
   "lookaheadDays": 2,
   "schedulerIntervalMinutes": 15,
   "mlbApiBaseUrl": "https://statsapi.mlb.com/api/v1",
-  "dbPath": "./data/games.db"
+  "statePath": "./data/state.json"
 }

@@ -62,12 +62,12 @@ async function processGame(game) {
   // Skip postponed or cancelled games
   if (game.status === 'Postponed' || game.status === 'Cancelled') {
     logger.info({ gameId: game.gameId, status: game.status }, 'Skipping postponed/cancelled game');
-    upsertGame(game);
+    await upsertGame(game);
     return;
   }
 
   // Upsert the game into the database
-  upsertGame(game);
+  await upsertGame(game);
 
   // Check and send 24h notification
   if (config.notifications['24h'] && !isNotificationSent(game.gameId, '24h')) {
@@ -75,7 +75,7 @@ async function processGame(game) {
       logger.info({ gameId: game.gameId }, 'Sending 24h notification');
       const message = gameReminder24h(game);
       await sendMessage(message);
-      markNotificationSent(game.gameId, '24h');
+      await markNotificationSent(game.gameId, '24h');
     }
   }
 
@@ -85,7 +85,7 @@ async function processGame(game) {
       logger.info({ gameId: game.gameId }, 'Sending 3h notification');
       const message = gameReminder3h(game);
       await sendMessage(message);
-      markNotificationSent(game.gameId, '3h');
+      await markNotificationSent(game.gameId, '3h');
     }
   }
 
@@ -95,7 +95,7 @@ async function processGame(game) {
       logger.info({ gameId: game.gameId }, 'Sending final result notification');
       const message = gameEnded(game);
       await sendMessage(message);
-      markNotificationSent(game.gameId, 'final');
+      await markNotificationSent(game.gameId, 'final');
     }
   }
 }

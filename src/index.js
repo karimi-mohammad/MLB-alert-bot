@@ -6,14 +6,14 @@ import logger from './utils/logger.js';
 
 /**
  * Main entry point for MLB Alert Bot.
- * Initializes the database and runs the notification engine.
+ * Initializes the state store and runs the notification engine.
  */
 async function main() {
   logger.info('MLB Alert Bot starting');
 
   try {
-    // Initialize database
-    initDatabase();
+    // Initialize state store
+    await initDatabase();
 
     // Run the notification engine
     await runNotificationEngine();
@@ -23,8 +23,8 @@ async function main() {
     logger.error({ error: error.message, stack: error.stack }, 'MLB Alert Bot failed');
     process.exit(1);
   } finally {
-    // Close database connection
-    closeDatabase();
+    // Flush state and close
+    await closeDatabase();
   }
 }
 

@@ -1,70 +1,95 @@
-import Database from 'better-sqlite3';
 import path from 'path';
 import fs from 'fs';
+import fsp from 'fs/promises';
 import config from '../config.js';
 import logger from '../utils/logger.js';
 
-let db = null;
+/** @type {{ games: Record<number, import('./repository.js').GameState> } | null} */
+let state = null;
+
+/** @type {string} */
+let stateFilePath = '';
 
 /**
- * Initialize the SQLite database and create tables if they don't exist.
- * @returns {Database}
+ * Initialize the JSON state store.
+ * Reads the file if it exists, otherwise creates an empty state.
+ * @returns {Promise<{ games: Record<number, object> }>}
  */
-export function initDatabase() {
-  if (db) return db;
+export async function initDatabase() {
+  if (state) return state;
+
+  stateFilePath = config.statePath;
 
   // Ensure the data directory exists
-  const dbDir = path.dirname(config.dbPath);
-  if (!fs.existsSync(dbDir)) {
-    fs.mkdirSync(dbDir, { recursive: true });
+  const dir = path.dirname(stateFilePath);
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
   }
 
-  logger.info({ dbPath: config.dbPath }, 'Initializing database');
-  db = new Database(config.dbPath);
+  logger.info({ statePath: stateFilePath }, 'Initializing JSON state store');
 
-  // Enable WAL mode for better concurrent access
-  db.pragma('journal_mode = WAL');
+  try {
+    const raw = await fsp.readFile(stateFilePath, 'utf-8');
+    const parsed = JSON.parse(raw);
 
-  // Create the games table
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS games (
-      gameId INTEGER PRIMARY KEY,
-      gameDate TEXT NOT NULL,
-      homeTeam TEXT NOT NULL,
-      awayTeam TEXT NOT NULL,
-      sent24h INTEGER NOT NULL DEFAULT 0,
-      sent3h INTEGER NOT NULL DEFAULT 0,
-      sentFinal INTEGER NOT NULL DEFAULT 0,
-      winner TEXT,
-      homeScore INTEGER,
-      awayScore INTEGER,
-      lastStatus TEXT NOT NULL DEFAULT 'Scheduled',
-      updatedAt TEXT NOT NULL DEFAULT (datetime('now'))
-    )
-  `);
+    // Validate the shape — if it doesn't have a games object, treat as corrupted
+    if (!parsed || typeof parsed !== 'object' || !parsed.games) {
+      throw new Error('Invalid state structure');
+    }
 
-  logger.info('Database initialized successfully');
-  return db;
+    state = { games: parsed.games };
+    logger.info({ gameCount: Object.keys(state.games).length }, 'State loaded from disk');
+  } catch (error) {
+    // File missing or corrupted — start fresh
+    logger.warn({ error: error.message }, 'Could not load state file, creating empty state');
+    state = { games: {} };
+    await flushState();
+  }
+
+  return state;
 }
 
 /**
- * Get the database instance.
- * @returns {Database}
+ * Get the in-memory state reference.
+ * @returns {{ games: Record<number, object> }}
  */
-export function getDatabase() {
-  if (!db) {
-    throw new Error('Database not initialized. Call initDatabase() first.');
+export function getState() {
+  if (!state) {
+    throw new Error('State not initialized. Call initDatabase() first.');
   }
-  return db;
+  return state;
 }
 
 /**
- * Close the database connection.
+ * Atomically write the in-memory state to disk.
+ * Writes to a temp file first, then renames for atomicity.
+ * @returns {Promise<void>}
  */
-export function closeDatabase() {
-  if (db) {
-    db.close();
-    db = null;
-    logger.info('Database connection closed');
+export async function flushState() {
+  if (!state) return;
+
+  const tmpPath = stateFilePath + '.tmp';
+  const content = JSON.stringify(state, null, 2);
+
+  try {
+    await fsp.writeFile(tmpPath, content, 'utf-8');
+    await fsp.rename(tmpPath, stateFilePath);
+  } catch (error) {
+    logger.error({ error: error.message }, 'Failed to flush state to disk');
+    // Clean up temp file on failure
+    try { await fsp.unlink(tmpPath); } catch { /* ignore */ }
+    throw error;
+  }
+}
+
+/**
+ * Close the state store (flush to disk and clear memory).
+ * @returns {Promise<void>}
+ */
+export async function closeDatabase() {
+  if (state) {
+    await flushState();
+    state = null;
+    logger.info('State store closed');
   }
 }

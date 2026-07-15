@@ -10,6 +10,7 @@ A fully automated, serverless Telegram bot that monitors MLB games and sends Per
 - ✅ **Duplicate prevention** — Each notification sent exactly once per game
 - ✅ **Fully automated** — Runs via GitHub Actions every 15 minutes
 - ✅ **No server required** — Free, serverless operation
+- ✅ **Zero dependencies** — No native modules, pure JavaScript
 - ✅ **Configurable** — Enable/disable each notification type via `config.json`
 
 ## How It Works
@@ -24,7 +25,7 @@ GitHub Actions (every 15 min)
     - Check if 3h notification is due → send
     - Check if game ended → send result
         ↓
-  Update SQLite database (persisted via cache)
+  Update JSON state file (persisted via GitHub cache)
 ```
 
 ## Setup
@@ -80,6 +81,33 @@ npm run dry-run
 npm start
 ```
 
+## State Storage
+
+The bot uses a lightweight JSON file (`data/state.json`) to track notification state:
+
+```json
+{
+  "games": {
+    "823440": {
+      "gameId": 823440,
+      "gameDate": "2026-07-16T23:10:00Z",
+      "homeTeam": "Philadelphia Phillies",
+      "awayTeam": "New York Mets",
+      "sent24h": false,
+      "sent3h": false,
+      "sentFinal": false,
+      "winner": null,
+      "homeScore": null,
+      "awayScore": null,
+      "lastStatus": "Scheduled",
+      "updatedAt": "2026-07-15T20:15:17.829Z"
+    }
+  }
+}
+```
+
+The state file is written atomically (write to `.tmp`, then rename) to prevent corruption. It's persisted between GitHub Actions runs via the cache.
+
 ## Project Structure
 
 ```
@@ -90,8 +118,8 @@ src/
 │   ├── client.js         # MLB Stats API client
 │   └── parser.js         # API data parser
 ├── db/
-│   ├── database.js       # SQLite initialization
-│   └── repository.js     # Database operations
+│   ├── database.js       # JSON state store (init, flush, close)
+│   └── repository.js     # Game CRUD operations
 ├── notifications/
 │   └── engine.js         # Notification decision logic
 ├── telegram/

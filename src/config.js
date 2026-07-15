@@ -18,13 +18,14 @@ function loadConfig() {
     lookaheadDays: config.lookaheadDays || 2,
     schedulerIntervalMinutes: config.schedulerIntervalMinutes || 15,
     mlbApiBaseUrl: process.env.MLB_API_BASE_URL || config.mlbApiBaseUrl || 'https://statsapi.mlb.com/api/v1',
-    dbPath: path.resolve(__dirname, '..', config.dbPath || './data/games.db'),
+    statePath: path.resolve(__dirname, '..', config.statePath || './data/state.json'),
     telegramBotToken: process.env.TELEGRAM_BOT_TOKEN,
     telegramChannelId: process.env.TELEGRAM_CHANNEL_ID,
     dryRun: process.argv.includes('--dry-run'),
   };
 }
 
+/** @type {ReturnType<typeof loadConfig>} */
 const config = loadConfig();
 
 export default config;
