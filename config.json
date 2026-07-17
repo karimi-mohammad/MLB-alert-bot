@@ -1,12 +1,12 @@
 {
   "notifications": {
     "24h": true,
-    "3h": true,
+    "2h": true,
     "gameStart": false,
     "gameEnd": true
   },
   "timezone": "Asia/Tehran",
-  "lookaheadDays": 2,
+  "lookaheadDays": 3,
   "schedulerIntervalMinutes": 15,
   "mlbApiBaseUrl": "https://statsapi.mlb.com/api/v1",
   "statePath": "./data/state.json"

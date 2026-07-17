@@ -49,3 +49,31 @@ export function extractGames(data) {
 
   return games;
 }
+
+/**
+ * Fetch the current status of a single game by its ID.
+ * Uses the schedule endpoint with gamePk parameter to get updated status regardless of date.
+ * @param {number} gameId - MLB game ID
+ * @returns {Promise<Object|null>} Game data object or null if not found
+ */
+export async function fetchGameStatus(gameId) {
+  const url = `${config.mlbApiBaseUrl}/schedule?gamePk=${gameId}&sportId=1`;
+  logger.info({ url, gameId }, 'Fetching game status');
+
+  try {
+    const response = await fetch(url, {
+      headers: { 'User-Agent': 'MLB-Alert-Bot/1.0' },
+    });
+
+    if (!response.ok) {
+      throw new Error(`MLB API responded with ${response.status}: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    const games = extractGames(data);
+    return games[0] || null;
+  } catch (error) {
+    logger.error({ error: error.message, gameId }, 'Failed to fetch game status');
+    throw error;
+  }
+}

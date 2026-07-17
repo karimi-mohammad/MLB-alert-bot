@@ -27,7 +27,7 @@ export function gameReminder24h(game) {
 }
 
 /**
- * Generate the "3 hours before game" reminder message.
+ * Generate the "2 hours before game" reminder message.
  * @param {Object} game - Parsed game object
  * @returns {string} Formatted Persian message
  */
@@ -35,7 +35,7 @@ export function gameReminder3h(game) {
   const time = formatToTehranTime(game.gameDate);
 
   return [
-    '⏰ تنها ۳ ساعت تا شروع مسابقه',
+    '⏰ تنها ۲ ساعت تا شروع مسابقه',
     '',
     `🟥 ${game.awayTeam}`,
     '',

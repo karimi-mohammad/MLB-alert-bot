@@ -49,3 +49,25 @@ export async function sendMessage(text) {
     throw error;
   }
 }
+
+/**
+ * Send an error alert message to the Telegram channel.
+ * This is used to notify about errors during bot execution.
+ * @param {string} context - Description of where the error occurred
+ * @param {string} errorMessage - The error message
+ * @returns {Promise<void>}
+ */
+export async function sendErrorAlert(context, errorMessage) {
+  const text = [
+    '🚨 <b>خطا در ربات MLB</b>',
+    '',
+    `📍 ${context}`,
+    `❌ ${errorMessage}`,
+  ].join('\n');
+
+  try {
+    await sendMessage(text);
+  } catch (error) {
+    logger.error({ error: error.message }, 'Failed to send error alert to Telegram');
+  }
+}

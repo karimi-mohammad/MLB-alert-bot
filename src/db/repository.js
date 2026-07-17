@@ -8,7 +8,7 @@ import logger from '../utils/logger.js';
  * @property {string} homeTeam
  * @property {string} awayTeam
  * @property {boolean} sent24h
- * @property {boolean} sent3h
+ * @property {boolean} sent2h
  * @property {boolean} sentFinal
  * @property {string|null} winner
  * @property {number|null} homeScore
@@ -48,7 +48,7 @@ export async function upsertGame(game) {
       homeTeam: game.homeTeam,
       awayTeam: game.awayTeam,
       sent24h: false,
-      sent3h: false,
+      sent2h: false,
       sentFinal: false,
       winner: game.winner,
       homeScore: game.homeScore,
@@ -84,7 +84,7 @@ export function getAllGames() {
 /**
  * Mark a notification as sent for a specific game.
  * @param {number} gameId
- * @param {'24h'|'3h'|'final'} type - Notification type
+ * @param {'24h'|'2h'|'final'} type - Notification type
  * @returns {Promise<void>}
  */
 export async function markNotificationSent(gameId, type) {
@@ -99,8 +99,8 @@ export async function markNotificationSent(gameId, type) {
     case '24h':
       game.sent24h = true;
       break;
-    case '3h':
-      game.sent3h = true;
+    case '2h':
+      game.sent2h = true;
       break;
     case 'final':
       game.sentFinal = true;
@@ -115,7 +115,7 @@ export async function markNotificationSent(gameId, type) {
 /**
  * Check if a notification has been sent for a specific game.
  * @param {number} gameId
- * @param {'24h'|'3h'|'final'} type - Notification type
+ * @param {'24h'|'2h'|'final'} type - Notification type
  * @returns {boolean}
  */
 export function isNotificationSent(gameId, type) {
@@ -126,8 +126,8 @@ export function isNotificationSent(gameId, type) {
   switch (type) {
     case '24h':
       return game.sent24h === true;
-    case '3h':
-      return game.sent3h === true;
+    case '2h':
+      return game.sent2h === true;
     case 'final':
       return game.sentFinal === true;
     default:
