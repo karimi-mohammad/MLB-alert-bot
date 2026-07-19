@@ -1,0 +1,49 @@
+name = "mlb-alert-bot"
+main = "src/index.js"
+compatibility_date = "2024-12-01"
+
+# ============================================================
+# KV Namespace for storing game state (prevents duplicate alerts)
+# ============================================================
+# Create it first (wrangler v4):
+#   npx wrangler kv namespace create MLB_STATE --binding MLB_STATE --update-config
+# This will auto-update the ID below:
+kv_namespaces = [
+  { binding = "MLB_STATE", id = "f302bdb6aecb4ea8a5a82029a294be69" }
+]
+
+# ============================================================
+# Environment Variables (non-secret config)
+# ============================================================
+[vars]
+NOTIFY_24H = "true"
+NOTIFY_2H = "true"
+NOTIFY_GAME_START = "false"
+NOTIFY_GAME_END = "true"
+TIMEZONE = "Asia/Tehran"
+LOOKAHEAD_DAYS = "3"
+MLB_API_BASE_URL = "https://statsapi.mlb.com/api/v1"
+
+# ============================================================
+# Secrets (set via `npx wrangler secret put <NAME>`)
+# ============================================================
+# TELEGRAM_BOT_TOKEN  - Your bot token from @BotFather
+# TELEGRAM_CHANNEL_ID - Your channel ID (e.g., @channel or -100...)
+
+# ============================================================
+# Cron Trigger (optional - uncomment if using Cloudflare scheduler)
+# ============================================================
+# [triggers]
+# crons = ["*/15 * * * *"]
+
+# ============================================================
+# Observability - Logging
+# ============================================================
+[observability]
+logs = { enabled = true, invocation_logs = true }
+
+# ============================================================
+# Compatibility flags
+# ============================================================
+# [compatibility_flags]
+# nodejs_compat = true

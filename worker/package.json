@@ -1,0 +1,25 @@
+{
+  "name": "mlb-alert-worker",
+  "version": "1.0.0",
+  "description": "MLB Alert Bot - Cloudflare Worker version",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "build": "node build.js",
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "list-secrets": "wrangler secret list"
+  },
+  "keywords": [
+    "mlb",
+    "telegram",
+    "bot",
+    "cloudflare",
+    "worker"
+  ],
+  "license": "ISC",
+  "devDependencies": {
+    "esbuild": "^0.24.0",
+    "wrangler": "^4.112.0"
+  }
+}

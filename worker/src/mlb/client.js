@@ -1,0 +1,84 @@
+/**
+ * MLB API client for Cloudflare Worker.
+ * Uses the global fetch API (no undici dependency needed).
+ */
+
+import logger from '../utils/logger.js';
+
+/**
+ * Fetch the MLB schedule for a given date.
+ * @param {string} date - YYYY-MM-DD format
+ * @param {import('../config.js').config} config
+ * @returns {Promise<Array>} Array of game data objects
+ */
+export async function fetchSchedule(date, config) {
+  const url = `${config.mlbApiBaseUrl}/schedule?date=${date}&sportId=1`;
+  logger.info({ url }, 'Fetching MLB schedule');
+
+  try {
+    const response = await fetch(url, {
+      headers: { 'User-Agent': 'MLB-Alert-Bot/1.0' },
+    });
+
+    if (!response.ok) {
+      throw new Error(`MLB API responded with ${response.status}: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    logger.error({ error: error.message, date }, 'Failed to fetch MLB schedule');
+    throw error;
+  }
+}
+
+/**
+ * Extract game entries from the MLB API response.
+ * @param {Object} data - Raw API response
+ * @returns {Array} Array of game objects
+ */
+export function extractGames(data) {
+  if (!data || !data.dates || data.dates.length === 0) {
+    return [];
+  }
+
+  const games = [];
+  for (const dateEntry of data.dates) {
+    if (dateEntry.games) {
+      for (const game of dateEntry.games) {
+        games.push(game);
+      }
+    }
+  }
+
+  return games;
+}
+
+/**
+ * Fetch the current status of a single game by its ID.
+ * Uses the schedule endpoint with gamePk parameter to get updated status regardless of date.
+ * @param {number} gameId - MLB game ID
+ * @param {import('../config.js').config} config
+ * @returns {Promise<Object|null>} Game data object or null if not found
+ */
+export async function fetchGameStatus(gameId, config) {
+  const url = `${config.mlbApiBaseUrl}/schedule?gamePk=${gameId}&sportId=1`;
+  logger.info({ url, gameId }, 'Fetching game status');
+
+  try {
+    const response = await fetch(url, {
+      headers: { 'User-Agent': 'MLB-Alert-Bot/1.0' },
+    });
+
+    if (!response.ok) {
+      throw new Error(`MLB API responded with ${response.status}: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    const games = extractGames(data);
+    return games[0] || null;
+  } catch (error) {
+    logger.error({ error: error.message, gameId }, 'Failed to fetch game status');
+    throw error;
+  }
+}
